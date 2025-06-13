@@ -2,6 +2,9 @@
 
 Este projeto contém um montador simples escrito em Python para a CPU descrita no livro **"But How Do It Know?: The Basic Principles of Computers for Everyone"** de J. Clark Scott.
 
+![image](https://github.com/user-attachments/assets/2525d152-0dbe-43c1-af7a-a94bce82ac07)
+
+
 O script `montador.py` converte um arquivo `program.asm`, escrito em assembly compatível com o computador do livro, em um arquivo `program.txt` no formato `v3.0 hex words plain` (usado em ferramentas como o Logisim para inicializar memória).
 
 ## Como usar
