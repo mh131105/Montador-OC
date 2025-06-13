@@ -5,18 +5,31 @@ Este projeto contém um montador simples escrito em Python para a CPU descrita n
 ![image](https://github.com/user-attachments/assets/2525d152-0dbe-43c1-af7a-a94bce82ac07)
 
 
-O script `montador.py` converte um arquivo `program.asm`, escrito em assembly compatível com o computador do livro, em um arquivo `program.txt` no formato `v3.0 hex words plain` (usado em ferramentas como o Logisim para inicializar memória).
+O script `montador.py` converte um arquivo assembly em um arquivo `program.txt` no formato `v3.0 hex words plain` (usado em ferramentas como o Logisim para inicializar memória). Por padrão ele procura `program.asm`, mas é possível indicar qualquer arquivo de entrada pela linha de comando.
 
 ## Como usar
 
-1. Crie um arquivo chamado `program.asm` no mesmo diretório contendo o programa em assembly. Cada instrução pode ser separada por espaços ou vírgulas e os comentários começam com `;`.
-2. Execute o montador:
+1. Crie um arquivo `program.asm` (ou outro nome de sua escolha) contendo o programa em assembly. Cada instrução pode ser separada por espaços ou vírgulas e os comentários começam com `;`.
+2. Execute o montador indicando o arquivo de entrada e opcionalmente o de saída:
 
 ```bash
-python3 montador.py
+python3 montador.py seu_programa.asm -o resultado.txt
 ```
 
-3. O arquivo `program.txt` será gerado com os códigos de máquina em hexadecimal, prontos para serem carregados na memória do simulador.
+Se nenhum arquivo for informado, o montador usa `program.asm` e gera `program.txt`.
+
+Antes de executar, é possível compilar os arquivos Python para verificar
+erros de sintaxe utilizando `py_compile`:
+
+```bash
+python3 -m py_compile arquivo1.py montador.py
+```
+
+Em seguida rode o montador normalmente:
+
+```bash
+python3 montador.py seu_programa.asm -o resultado.txt
+```
 
 ## Conjunto de Instruções
 

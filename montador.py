@@ -1,3 +1,5 @@
+import argparse
+
 memory = 256*["00"]
 
 intruções = {"R0" : "00",
@@ -75,7 +77,6 @@ def ler_arquivo_asm(arquivo):
         programa_asm[i] = programa_asm[i].replace(","," ")
         programa_asm[i] = programa_asm[i].split()
     programa_asm = list(filter(bool, programa_asm))
-    print(programa_asm)
     return programa_asm
 
 def conversao(programa_asm):
@@ -223,11 +224,26 @@ def escrever_saida(arquivo):
             f.write(codigo)
             f.write("\n")
 
-def montador():
-    print("executando como script principal.")
-    programa_asm = ler_arquivo_asm("program.asm")
+def montador(argv=None):
+    """Executa o montador utilizando argumentos de linha de comando."""
+    parser = argparse.ArgumentParser(description="Montador OC")
+    parser.add_argument(
+        "source",
+        nargs="?",
+        default="program.asm",
+        help="Arquivo de entrada em assembly",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        default="program.txt",
+        help="Arquivo de saída gerado",
+    )
+    args = parser.parse_args(argv)
+
+    programa_asm = ler_arquivo_asm(args.source)
     conversao(programa_asm)
-    escrever_saida("program.txt")
+    escrever_saida(args.output)
     
 
 if __name__ == "__main__":
