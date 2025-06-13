@@ -1,0 +1,56 @@
+# Montador OC
+
+Este projeto contém um montador simples escrito em Python para a CPU descrita no livro **"But How Do It Know?: The Basic Principles of Computers for Everyone"** de J. Clark Scott.
+
+O script `montador.py` converte um arquivo `program.asm`, escrito em assembly compatível com o computador do livro, em um arquivo `program.txt` no formato `v3.0 hex words plain` (usado em ferramentas como o Logisim para inicializar memória).
+
+## Como usar
+
+1. Crie um arquivo chamado `program.asm` no mesmo diretório contendo o programa em assembly. Cada instrução pode ser separada por espaços ou vírgulas e os comentários começam com `;`.
+2. Execute o montador:
+
+```bash
+python3 montador.py
+```
+
+3. O arquivo `program.txt` será gerado com os códigos de máquina em hexadecimal, prontos para serem carregados na memória do simulador.
+
+## Conjunto de Instruções
+
+O montador reconhece as seguintes instruções (todas em letras maiúsculas):
+
+- `LD RD RS`   – Carrega o conteúdo de `RS` em `RD`.
+- `ST RD RS`   – Armazena o conteúdo de `RS` no endereço apontado por `RD`.
+- `DATA RX VALOR` – Coloca o valor imediato após a instrução. Útil para definir constantes.
+- `JMPR RX`    – Salta para o endereço contido em `RX`.
+- `JMP END`    – Salto incondicional para `END`.
+- `IN/OUT TIPO RX` – Operações de entrada/saída. `TIPO` pode ser `DATA` ou `ADDR`.
+- `ADD`, `SHR`, `SHL`, `NOT`, `AND`, `OR`, `XOR`, `CMP` – Operações aritméticas ou lógicas entre registradores.
+- `CLF`        – Limpa os registradores de flags.
+- Saltos condicionais podem ser formados pelas letras `C`, `A`, `E` e/ou `Z` seguidas do endereço (por exemplo `JCZ 0x10`).
+
+Cada instrução é convertida para um ou dois bytes de acordo com o formato definido no processador do livro.
+
+## Exemplo simples
+
+```
+LD R0 R1      ; carrega R1 em R0
+ADD R0 R2     ; soma R2 em R0
+DATA R3 5     ; define o valor 5 logo apos
+```
+
+Executando `python3 montador.py` com o código acima gera `program.txt` contendo:
+
+```
+v3.0 hex words plain
+01
+82
+23
+05
+```
+
+O restante da memória é preenchido com `00`.
+
+## Licença
+
+Este projeto foi disponibilizado sem um arquivo de licença explícito. Consulte o autor original para mais informações.
