@@ -18,6 +18,9 @@ python3 montador.py seu_programa.asm -o resultado.txt
 
 Se nenhum arquivo for informado, o montador usa `program.asm` e gera `program.txt`.
 
+Endereços informados em decimal devem estar no intervalo de -128 a 255. Valores fora desse
+intervalo resultarão em erro de conversão.
+
 Antes de executar, é possível compilar os arquivos Python para verificar
 erros de sintaxe utilizando `py_compile`:
 
