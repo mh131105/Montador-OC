@@ -47,6 +47,8 @@ def bin(n, width: int = 4, twos_complement: bool = False):
 
 def decBin(n):
     n = int(n)
+    if n < -128 or n > 255:
+        raise ValueError("Valor decimal fora do intervalo permitido [-128, 255]")
     return "0b" + format(n & 0xFF, "08b")
 
 def normalizaNumero (s):
@@ -242,7 +244,11 @@ def montador(argv=None):
     args = parser.parse_args(argv)
 
     programa_asm = ler_arquivo_asm(args.source)
-    conversao(programa_asm)
+    try:
+        conversao(programa_asm)
+    except ValueError as e:
+        print(f"Erro: {e}")
+        return
     escrever_saida(args.output)
     
 
