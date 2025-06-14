@@ -47,22 +47,30 @@ def bin(n, width: int = 4, twos_complement: bool = False):
 
 def decBin(n):
     n = int(n)
+    if n < -128 or n > 255:
+        raise ValueError("Valor decimal fora do intervalo permitido [-128, 255]")
     return "0b" + format(n & 0xFF, "08b")
 
-def normalizaNumero (s):
-    if (s[0] == "-"):
-        s = decBin(s)
-        s = hexa(s)
-        return s
-    if (len(s) > 1) and ((s[1] == "b") or (s[1] == "B")):
-        s = hexa(s)
-        return s
-    if (len(s) > 1) and ((s[1] == "x") or (s[1] == "X")):
-        return s[2:]
-    else:
-        s = decBin(s)
-        s = hexa(s)
-        return s
+def normalizaNumero(s, line_index=None, programa=None):
+    try:
+        if s[0] == "-":
+            s = decBin(s)
+            s = hexa(s)
+            return s
+        if (len(s) > 1) and ((s[1] == "b") or (s[1] == "B")):
+            s = hexa(s)
+            return s
+        if (len(s) > 1) and ((s[1] == "x") or (s[1] == "X")):
+            return s[2:]
+        else:
+            s = decBin(s)
+            s = hexa(s)
+            return s
+    except ValueError as e:
+        if line_index is not None and programa is not None:
+            line_text = " ".join(programa[line_index])
+            raise ValueError(f"{e} na linha {line_index + 1}: {line_text}") from None
+        raise
 
 def removeListasVazias(list_of_lists: list[list]) -> list[list]:
     return [sub for sub in list_of_lists if sub]
@@ -87,99 +95,99 @@ def conversao(programa_asm):
         match programa_asm[i][0]:
             case("LD"):
                 inst = "0b" + intruções[programa_asm[i][0]] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 i += 1
                 mem += 1
             case("ST"):
                 inst = "0b" + intruções[programa_asm[i][0]] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 i += 1
                 mem += 1
             case("DATA"):
                 inst = "0b" + intruções[programa_asm[i][0]] + "00" + intruções[programa_asm[i][1]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 mem += 1
                 inst = programa_asm[i][2]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 i += 1 
                 mem += 1
             case("JMPR"):
                 inst = "0b" + intruções[programa_asm[i][0]] + "00" + intruções[programa_asm[i][1]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 mem += 1
                 i += 1
             case("JMP"):
                 inst = "0b" + intruções[programa_asm[i][0]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 mem += 1
                 inst = programa_asm[i][1]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 mem += 1
                 i += 1
             case("IN"):
                 inst = "0b" + intruções[programa_asm[i][0]] + "0" + InOut[programa_asm[i][1]] + intruções[programa_asm[i][2]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 mem += 1
                 i += 1
             case("OUT"):
                 inst = "0b" + intruções[programa_asm[i][0]] + "1" + InOut[programa_asm[i][1]] + intruções[programa_asm[i][2]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 mem += 1
                 i += 1
             case("ADD"):
                 inst = "0b" + intruções[programa_asm[i][0]] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 i += 1
                 mem += 1
             case("SHR"):
                 inst = "0b" + intruções[programa_asm[i][0]] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 i += 1
                 mem += 1
             case("SHL"):
                 inst = "0b" + intruções[programa_asm[i][0]] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 i += 1
                 mem += 1
             case("NOT"):
                 inst = "0b" + intruções[programa_asm[i][0]] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 i += 1
                 mem += 1
             case("AND"):
                 inst = "0b" + intruções[programa_asm[i][0]] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 i += 1
                 mem += 1
             case("OR"):
                 inst = "0b" + intruções[programa_asm[i][0]] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 i += 1
                 mem += 1
             case("XOR"):
                 inst = "0b" + intruções[programa_asm[i][0]] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 i += 1
                 mem += 1
             case("CMP"):
                 inst = "0b" + intruções[programa_asm[i][0]] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 i += 1
                 mem += 1
@@ -206,11 +214,11 @@ def conversao(programa_asm):
                             caez = caez + jcaez[f[j]]
                 caez = bin(caez)
                 inst = "0b" + "0101" + str(caez[2:])
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 mem += 1
                 inst = programa_asm[i][1]
-                inst = normalizaNumero(inst)
+                inst = normalizaNumero(inst, i, programa_asm)
                 memory[mem] = inst
                 mem += 1
                 i += 1
@@ -242,7 +250,11 @@ def montador(argv=None):
     args = parser.parse_args(argv)
 
     programa_asm = ler_arquivo_asm(args.source)
-    conversao(programa_asm)
+    try:
+        conversao(programa_asm)
+    except ValueError as e:
+        print(f"Erro: {e}")
+        return
     escrever_saida(args.output)
     
 
