@@ -1,54 +1,36 @@
-; vector_swap.asm - initialize and reverse a 7-element vector in place
-; The vector uses the last seven memory addresses (0xF9..0xFF).
-; Program assembled with montador.py
+; vector_swap.asm - preenche os ultimos sete enderecos da memoria com a sequencia
+; 7,6,5,4,3,2,1 e depois reverte a ordem in-place para 1,2,3,4,5,6,7.
+; Montado com montador.py
 
-; ----- Stage 1: write numbers 1..7 starting from 0xFF -----
+; ----- Etapa 1: grava valores 1..7 a partir do fim -----
+DATA R0 0xFF      ; ponteiro para o ultimo endereco
+DATA R1 1         ; valor inicial
+DATA R2 7         ; contador de elementos
 
-DATA R0 0xFF      ; pointer to last address
-DATA R1 1         ; current value
 ST R0 R1          ; [0xFF] = 1
-DATA R2 -1        ; decrement step
-ADD R0 R2         ; -> 0xFE
+DATA R3 -1
+ADD R0 R3         ; ponteiro--
+DATA R3 1
+ADD R1 R3         ; proximo valor
+DATA R3 -1
+ADD R2 R3         ; contador--
+JZ 0x14           ; se contador==0, fim da inicializacao
+JMP 0x06          ; volta para ST R0 R1
 
-DATA R1 2
-ST R0 R1          ; [0xFE] = 2
-ADD R0 R2         ; -> 0xFD
+; ----- Etapa 2: inverte elementos -----
+DATA R0 0xF9      ; inicio do vetor
+DATA R1 0xFF      ; fim do vetor
 
-DATA R1 3
-ST R0 R1          ; [0xFD] = 3
-ADD R0 R2         ; -> 0xFC
-
-DATA R1 4
-ST R0 R1          ; [0xFC] = 4
-ADD R0 R2         ; -> 0xFB
-
-DATA R1 5
-ST R0 R1          ; [0xFB] = 5
-ADD R0 R2         ; -> 0xFA
-
-DATA R1 6
-ST R0 R1          ; [0xFA] = 6
-ADD R0 R2         ; -> 0xF9
-
-DATA R1 7
-ST R0 R1          ; [0xF9] = 7
-
-; ----- Stage 2: reverse vector using a loop -----
-
-DATA R0 0xF9      ; start pointer
-DATA R1 0xFF      ; end pointer
-CMP R0 R1         ; compare pointers
-JAE 0x32           ; stop when start >= end
-
-LD R2 R0          ; value at start
-LD R3 R1          ; value at end
+CMP R0 R1
+JAE 0x27          ; sai quando inicio >= fim
+LD R2 R0
+LD R3 R1
 ST R0 R3
 ST R1 R2
-
 DATA R2 1
-ADD R0 R2         ; start++
+ADD R0 R2         ; inicio++
 DATA R2 -1
-ADD R1 R2         ; end--
-JMP 0x23
+ADD R1 R2         ; fim--
+JMP 0x18          ; repete o loop
 
-JMP 0x00          ; halt (infinite loop)
+JMP 0x27          ; loop infinito (halt)
