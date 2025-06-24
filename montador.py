@@ -70,6 +70,37 @@ def removeListasVazias(list_of_lists: list[list]) -> list[list]:  # elimina subl
     return [sub for sub in list_of_lists if sub]
 
 
+def instr_size(tokens: list[str]) -> int:
+    """Retorna o numero de bytes que a instrucao ou pseudo-instrucao gera."""
+    op = tokens[0]
+    if op == "DATA" or op == "JMP" or op.startswith("J") and len(op) > 1 and op != "JMPR":
+        return 2
+    if op == "HALT":
+        return 2
+    if op == "MOVE":
+        return 3
+    if op == "CLR":
+        return 1
+    return 1
+
+
+def parse_labels(programa_asm: list[list[str]]):
+    """Remove rotulos do codigo e retorna tabela de labels e instrucoes."""
+    labels = {}
+    cleaned = []
+    mem = 0
+    for line in programa_asm:
+        tokens = line[:]
+        while tokens and tokens[0].endswith(":"):
+            label = tokens.pop(0)[:-1]
+            labels[label] = mem
+        if not tokens:
+            continue
+        cleaned.append(tokens)
+        mem += instr_size(tokens)
+    return cleaned, labels
+
+
 def ler_arquivo_asm(arquivo):  # carrega e tokeniza o arquivo asm
     try:
         with open(arquivo, "r") as f:
@@ -85,35 +116,66 @@ def ler_arquivo_asm(arquivo):  # carrega e tokeniza o arquivo asm
     return programa_asm
 
 def conversao(programa_asm):  # gera codigo de maquina na memoria
-    tam = len(programa_asm)
+    programa, labels = parse_labels(programa_asm)
+    tam = len(programa)
     mem = 0
     i = 0
     while i < tam:
-        op = programa_asm[i][0]
+        op = programa[i][0]
+        if op == "HALT":
+            inst = "0b" + intruções["JMP"]
+            inst = normalizaNumero(inst)
+            memory[mem] = inst
+            mem += 1
+            inst = normalizaNumero(str(mem - 1))
+            memory[mem] = inst
+            mem += 1
+            i += 1
+            continue
+        elif op == "MOVE":
+            ra, rb = programa[i][1], programa[i][2]
+            seq = [(ra, rb), (rb, ra), (ra, rb)]
+            for a, b in seq:
+                inst = "0b" + intruções["XOR"] + intruções[a] + intruções[b]
+                inst = normalizaNumero(inst)
+                memory[mem] = inst
+                mem += 1
+            i += 1
+            continue
+        elif op == "CLR":
+            ra = programa[i][1]
+            inst = "0b" + intruções["XOR"] + intruções[ra] + intruções[ra]
+            inst = normalizaNumero(inst)
+            memory[mem] = inst
+            mem += 1
+            i += 1
+            continue
         if op == "LD":  # operacao de carga
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[programa[i][1]] + intruções[programa[i][2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "ST":  # operacao de armazenamento
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[programa[i][1]] + intruções[programa[i][2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "DATA":  # diretiva para dado imediato
-            inst = "0b" + intruções[op] + "00" + intruções[programa_asm[i][1]]
+            inst = "0b" + intruções[op] + "00" + intruções[programa[i][1]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
-            inst = programa_asm[i][2]
-            inst = normalizaNumero(inst)
+            operand = programa[i][2]
+            if operand in labels:
+                operand = str(labels[operand])
+            inst = normalizaNumero(operand)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "JMPR":  # salto para registrador
-            inst = "0b" + intruções[op] + "00" + intruções[programa_asm[i][1]]
+            inst = "0b" + intruções[op] + "00" + intruções[programa[i][1]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
@@ -123,67 +185,69 @@ def conversao(programa_asm):  # gera codigo de maquina na memoria
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
-            inst = programa_asm[i][1]
-            inst = normalizaNumero(inst)
+            operand = programa[i][1]
+            if operand in labels:
+                operand = str(labels[operand])
+            inst = normalizaNumero(operand)
             memory[mem] = inst
             mem += 1
             i += 1
         elif op == "IN":  # instrucao de entrada
-            inst = "0b" + intruções[op] + "0" + InOut[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + "0" + InOut[programa[i][1]] + intruções[programa[i][2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
             i += 1
         elif op == "OUT":  # instrucao de saida
-            inst = "0b" + intruções[op] + "1" + InOut[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + "1" + InOut[programa[i][1]] + intruções[programa[i][2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
             i += 1
         elif op == "ADD":  # soma registradores
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[programa[i][1]] + intruções[programa[i][2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "SHR":  # desloca bits para direita
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[programa[i][1]] + intruções[programa[i][2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "SHL":  # desloca bits para esquerda
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[programa[i][1]] + intruções[programa[i][2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "NOT":  # inverte bits
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[programa[i][1]] + intruções[programa[i][2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "AND":  # operacao logica AND
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[programa[i][1]] + intruções[programa[i][2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "OR":  # operacao logica OR
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[programa[i][1]] + intruções[programa[i][2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "XOR":  # operacao logica XOR
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[programa[i][1]] + intruções[programa[i][2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "CMP":  # compara registradores
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[programa[i][1]] + intruções[programa[i][2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
@@ -194,7 +258,7 @@ def conversao(programa_asm):  # gera codigo de maquina na memoria
             i += 1
         else:  # saltos condicionais
             caez = 0b0000
-            f = programa_asm[i][0]
+            f = programa[i][0]
             for ch in f:
                 if ch in jcaez:
                     caez += jcaez[ch]
@@ -203,8 +267,10 @@ def conversao(programa_asm):  # gera codigo de maquina na memoria
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
-            inst = programa_asm[i][1]
-            inst = normalizaNumero(inst)
+            operand = programa[i][1]
+            if operand in labels:
+                operand = str(labels[operand])
+            inst = normalizaNumero(operand)
             memory[mem] = inst
             mem += 1
             i += 1
