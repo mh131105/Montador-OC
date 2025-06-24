@@ -72,6 +72,33 @@ def removeListasVazias(list_of_lists: list[list]) -> list[list]:
     return [sub for sub in list_of_lists if sub]
 
 
+def is_numero(s: str) -> bool:
+    """Verifica se o token representa um numero decimal, hexadecimal ou binario."""
+    try:
+        int(s, 0)
+        return True
+    except ValueError:
+        return False
+
+
+def tamanho_instrucao(tokens: list[str]) -> int:
+    """Retorna quantos bytes a instrucao consome."""
+    if not tokens:
+        return 0
+    op = tokens[0]
+    if op in {"LD", "ST", "JMPR", "ADD", "SHR", "SHL", "NOT", "AND", "OR", "XOR", "CMP", "IN", "OUT", "CLF"}:
+        return 1
+    if op in {"DATA", "JMP"}:
+        return 2
+    if op.startswith("J"):
+        return 2
+    if op == "HALT":
+        return 2
+    if op in {"MOVE", "CLR"}:
+        return 3
+    return 1
+
+
 def ler_arquivo_asm(arquivo):
     try:
         with open(arquivo, "r") as f:
@@ -86,36 +113,67 @@ def ler_arquivo_asm(arquivo):
     programa_asm = list(filter(bool, programa_asm))
     return programa_asm
 
-def conversao(programa_asm):
+
+def primeira_passagem(programa: list[list[str]]):
+    pc = 0
+    labels: dict[str, int] = {}
+    for linha in programa:
+        tokens = linha
+        if tokens[0].endswith(":"):
+            rotulo = tokens[0][:-1]
+            if rotulo in intruções:
+                raise ValueError(f"nome de label invalido: {rotulo}")
+            if rotulo in labels:
+                raise ValueError("label duplicada")
+            labels[rotulo] = pc
+            tokens = tokens[1:]
+            if not tokens:
+                continue
+        pc += tamanho_instrucao(tokens)
+        if pc > 255:
+            raise ValueError("programa excede 256 bytes")
+    return pc, labels
+
+def conversao(programa_asm, labels: dict[str, int]):
     tam = len(programa_asm)
     mem = 0
     i = 0
     while i < tam:
-        op = programa_asm[i][0]
+        tokens = programa_asm[i]
+        if tokens[0].endswith(":"):
+            tokens = tokens[1:]
+            if not tokens:
+                i += 1
+                continue
+        op = tokens[0]
         if op == "LD":
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "ST":
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "DATA":
-            inst = "0b" + intruções[op] + "00" + intruções[programa_asm[i][1]]
+            inst = "0b" + intruções[op] + "00" + intruções[tokens[1]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
-            inst = programa_asm[i][2]
+            inst = tokens[2]
+            if not is_numero(inst):
+                if inst not in labels:
+                    raise ValueError("label indefinida")
+                inst = str(labels[inst])
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "JMPR":
-            inst = "0b" + intruções[op] + "00" + intruções[programa_asm[i][1]]
+            inst = "0b" + intruções[op] + "00" + intruções[tokens[1]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
@@ -125,67 +183,71 @@ def conversao(programa_asm):
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
-            inst = programa_asm[i][1]
+            inst = tokens[1]
+            if not is_numero(inst):
+                if inst not in labels:
+                    raise ValueError("label indefinida")
+                inst = str(labels[inst])
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
             i += 1
         elif op == "IN":
-            inst = "0b" + intruções[op] + "0" + InOut[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + "0" + InOut[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
             i += 1
         elif op == "OUT":
-            inst = "0b" + intruções[op] + "1" + InOut[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + "1" + InOut[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
             i += 1
         elif op == "ADD":
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "SHR":
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "SHL":
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "NOT":
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "AND":
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "OR":
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "XOR":
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "CMP":
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
@@ -200,34 +262,38 @@ def conversao(programa_asm):
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
-            inst = programa_asm[i][1]
+            inst = tokens[1]
+            if not is_numero(inst):
+                if inst not in labels:
+                    raise ValueError("label indefinida")
+                inst = str(labels[inst])
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
             i += 1
         elif op == "MOVE":
             op = "OR"
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][2]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
             op = "XOR"
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][1]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[1]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         elif op == "CLR":
             op = "XOR"
-            inst = "0b" + intruções[op] + intruções[programa_asm[i][1]] + intruções[programa_asm[i][1]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[1]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
             mem += 1
         else:
             caez = 0b0000
-            f = programa_asm[i][0]
+            f = tokens[0]
             for ch in f:
                 if ch in jcaez:
                     caez += jcaez[ch]
@@ -236,7 +302,11 @@ def conversao(programa_asm):
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
-            inst = programa_asm[i][1]
+            inst = tokens[1]
+            if not is_numero(inst):
+                if inst not in labels:
+                    raise ValueError("label indefinida")
+                inst = str(labels[inst])
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
@@ -275,7 +345,10 @@ def montador(argv=None):
         return
 
     try:
-        conversao(programa_asm)
+        _, labels = primeira_passagem(programa_asm)
+        global memory
+        memory = 256*["00"]
+        conversao(programa_asm, labels)
     except ValueError as e:
         print(f"Erro: {e}")
         return
