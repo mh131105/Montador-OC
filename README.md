@@ -7,6 +7,8 @@ Este projeto contém um montador simples escrito em Python para a CPU descrita n
 
 O script `montador.py` converte um arquivo assembly em um arquivo `program.txt` no formato `v3.0 hex words plain` (usado em ferramentas como o Logisim para inicializar memória). Por padrão ele procura `program.asm`, mas é possível indicar qualquer arquivo de entrada pela linha de comando.
 
+O montador faz duas passagens para resolver rótulos e inclui pseudo instruções como `HALT`, `MOVE` e `CLR` para facilitar a escrita de programas.
+
 ## Como usar
 
 1. Crie um arquivo `program.asm` (ou outro nome de sua escolha) contendo o programa em assembly. Cada instrução pode ser separada por espaços ou vírgulas e os comentários começam com `;`.
@@ -46,9 +48,14 @@ O montador reconhece as seguintes instruções (todas em letras maiúsculas):
 - `IN/OUT TIPO RX` – Operações de entrada/saída. `TIPO` pode ser `DATA` ou `ADDR`.
 - `ADD`, `SHR`, `SHL`, `NOT`, `AND`, `OR`, `XOR`, `CMP` – Operações aritméticas ou lógicas entre registradores.
 - `CLF`        – Limpa os registradores de flags.
+- `HALT [END]` – Salta para `END` ou encerra caso nenhum endereço seja informado.
+- `MOVE RD RS` – Copia o conteúdo de `RS` para `RD`.
+- `CLR RX`     – Zera o registrador especificado.
 - Saltos condicionais podem ser formados pelas letras `C`, `A`, `E` e/ou `Z` seguidas do endereço (por exemplo `JCZ 0x10`).
 
 Cada instrução é convertida para um ou dois bytes de acordo com o formato definido no processador do livro.
+
+O montador executa duas passagens para resolver rótulos. Qualquer palavra seguida de `:` define um rótulo que pode ser usado como destino de saltos ou no `HALT`.
 
 ## Exemplo simples
 
