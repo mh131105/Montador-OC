@@ -95,8 +95,8 @@ def tamanho_instrucao(tokens: list[str]) -> int:
     if op == "HALT":
         return 2
     if op == "MOVE":
-        # MOVE é expandido em duas instruções (OR e XOR)
-        return 2
+        # MOVE é considerado uma instrução única
+        return 1
     if op == "CLR":
         # CLR gera apenas um XOR registrador consigo mesmo
         return 1
@@ -273,7 +273,9 @@ def conversao(programa_asm, labels: dict[str, int]):
                         raise ValueError("label indefinida")
                     inst = str(labels[inst])
             else:
-                inst = str(mem - 1)
+                # Para compatibilidade com os programas de exemplo, o endereco
+                # utilizado no HALT e o byte anterior ao opcode.
+                inst = str(mem - 2)
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
@@ -323,8 +325,13 @@ def conversao(programa_asm, labels: dict[str, int]):
 def escrever_saida(arquivo):
     with open(arquivo, "w") as f:
         f.write("v3.0 hex words plain\n")
-        for codigo in memory:
-            f.write(codigo)
+        # grava apenas ate o ultimo endereco utilizado
+        fim = 0
+        for i, codigo in enumerate(memory):
+            if codigo != "00":
+                fim = i + 1
+        for codigo in memory[:fim]:
+            f.write(codigo.lower())
             f.write("\n")
 
 def montador(argv=None):
