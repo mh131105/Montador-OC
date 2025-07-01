@@ -1,7 +1,5 @@
 import argparse
 
-# Script de montagem para a CPU do livro "But How Do It Know?"
-
 # Autor: Matheus Henrique de Oliveira Garcia 22450747
 
 # Memoria com 256 bytes em texto hexadecimal
