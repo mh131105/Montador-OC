@@ -262,11 +262,14 @@ def conversao(programa_asm, labels: dict[str, int]):
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
-            inst = tokens[1]
-            if not is_numero(inst):
-                if inst not in labels:
-                    raise ValueError("label indefinida")
-                inst = str(labels[inst])
+            if len(tokens) > 1:
+                inst = tokens[1]
+                if not is_numero(inst):
+                    if inst not in labels:
+                        raise ValueError("label indefinida")
+                    inst = str(labels[inst])
+            else:
+                inst = str(mem - 1)
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
