@@ -1,9 +1,13 @@
 import argparse
 
-#Matheus Henrique de Oliveira Garcia 22450747
+# Script de montagem para a CPU do livro "But How Do It Know?"
 
+# Autor: Matheus Henrique de Oliveira Garcia 22450747
+
+# Memoria com 256 bytes em texto hexadecimal
 memory = 256*["00"]
 
+# Mapeamento de registradores e opcodes
 intruções = {"R0" : "00",
              "R1" : "01",
              "R2" : "10",
@@ -23,36 +27,38 @@ intruções = {"R0" : "00",
              "AND" : "1100",
              "OR" : "1101",
              "XOR" : "1110",
-             "CMP" : "1111"
-            }
+            "CMP" : "1111"
+           }
 
+# Mascara para saltos condicionais
 jcaez = {"C" : 0b1000,
          "A" : 0b0100,
          "E" : 0b0010,
          "Z" : 0b0001
         }
 
+# Parametros das instrucoes de I/O
 InOut = {"DATA" : "0",
          "ADDR" : "1"
 }
-
+# Converte binario para dois digitos hexadecimais
 def hexa(bin_str):
     if bin_str.lower().startswith("0b"):
         bin_str = bin_str[2:]
     value = int(bin_str, 2)
     return f"{value:02x}"[-2:]
-
+# Retorna binario com largura definida
 def bin(n, width: int = 4, twos_complement: bool = False):
     if twos_complement:
         n &= (1 << width) - 1
     return "0b" + format(n, f"0{width}b")
-
+# Decimal para binario de 8 bits
 def decBin(n):
     n = int(n)
     if n < -128 or n > 255:
         raise ValueError("Valor decimal fora do intervalo permitido [-128, 255]")
     return "0b" + format(n & 0xFF, "08b")
-
+# Padroniza numeros em hexadecimal
 def normalizaNumero (s):
     if (s[0] == "-"):
         s = decBin(s)
@@ -68,12 +74,13 @@ def normalizaNumero (s):
         s = hexa(s)
         return s
 
+# Elimina sublistas vazias
 def removeListasVazias(list_of_lists: list[list]) -> list[list]:
     return [sub for sub in list_of_lists if sub]
 
 
+# Retorna verdadeiro para strings numericas
 def is_numero(s: str) -> bool:
-    """Verifica se o token representa um numero decimal, hexadecimal ou binario."""
     try:
         int(s, 0)
         return True
@@ -81,8 +88,8 @@ def is_numero(s: str) -> bool:
         return False
 
 
+# Calcula o tamanho da instrucao em bytes
 def tamanho_instrucao(tokens: list[str]) -> int:
-    """Retorna quantos bytes a instrucao consome."""
     if not tokens:
         return 0
     op = tokens[0]
@@ -103,6 +110,7 @@ def tamanho_instrucao(tokens: list[str]) -> int:
     return 1
 
 
+# Le o codigo assembly e remove comentarios
 def ler_arquivo_asm(arquivo):
     try:
         with open(arquivo, "r") as f:
@@ -118,6 +126,7 @@ def ler_arquivo_asm(arquivo):
     return programa_asm
 
 
+# Calcula enderecos e registra labels
 def primeira_passagem(programa: list[list[str]]):
     pc = 0
     labels: dict[str, int] = {}
@@ -138,6 +147,7 @@ def primeira_passagem(programa: list[list[str]]):
             raise ValueError("programa excede 256 bytes")
     return pc, labels
 
+# Transforma cada instrucao em codigo de maquina
 def conversao(programa_asm, labels: dict[str, int]):
     tam = len(programa_asm)
     mem = 0
@@ -321,6 +331,7 @@ def conversao(programa_asm, labels: dict[str, int]):
                 
     return
 
+# Grava o arquivo program.txt
 def escrever_saida(arquivo):
     with open(arquivo, "w") as f:
         f.write("v3.0 hex words plain\n")
@@ -333,8 +344,8 @@ def escrever_saida(arquivo):
             f.write(codigo.lower())
             f.write("\n")
 
+# Processa argumentos e executa as etapas de montagem
 def montador(argv=None):
-    """Executa o montador utilizando argumentos de linha de comando."""
     parser = argparse.ArgumentParser(description="Montador OC")
     parser.add_argument(
         "source",
@@ -367,5 +378,6 @@ def montador(argv=None):
     escrever_saida(args.output)
     
 
+# Execucao direta
 if __name__ == "__main__":
     montador()
