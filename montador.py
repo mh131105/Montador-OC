@@ -273,7 +273,6 @@ def conversao(programa_asm, labels: dict[str, int]):
                         raise ValueError("label indefinida")
                     inst = str(labels[inst])
             else:
-                # Para compatibilidade com os programas de exemplo, o endereco
                 # utilizado no HALT e o byte anterior ao opcode.
                 inst = str(mem - 2)
             inst = normalizaNumero(inst)
