@@ -94,8 +94,12 @@ def tamanho_instrucao(tokens: list[str]) -> int:
         return 2
     if op == "HALT":
         return 2
-    if op in {"MOVE", "CLR"}:
-        return 3
+    if op == "MOVE":
+        # MOVE é expandido em duas instruções (OR e XOR)
+        return 2
+    if op == "CLR":
+        # CLR gera apenas um XOR registrador consigo mesmo
+        return 1
     return 1
 
 
@@ -279,14 +283,13 @@ def conversao(programa_asm, labels: dict[str, int]):
             inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
-            i += 1
             mem += 1
             op = "XOR"
             inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[1]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
-            i += 1
             mem += 1
+            i += 1
         elif op == "CLR":
             op = "XOR"
             inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[1]]
