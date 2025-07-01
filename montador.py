@@ -279,17 +279,17 @@ def conversao(programa_asm, labels: dict[str, int]):
             mem += 1
             i += 1
         elif op == "MOVE":
+            op = "XOR"
+            inst = "0b" + intruções[op] + intruções[tokens[2]] + intruções[tokens[2]]
+            inst = normalizaNumero(inst)
+            memory[mem] = inst
+            mem += 1
             op = "OR"
             inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
             inst = normalizaNumero(inst)
             memory[mem] = inst
             mem += 1
-            op = "XOR"
-            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[1]]
-            inst = normalizaNumero(inst)
-            memory[mem] = inst
-            mem += 1
-            i += 1
+            i+=1
         elif op == "CLR":
             op = "XOR"
             inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[1]]
