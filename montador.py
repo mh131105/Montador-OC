@@ -159,7 +159,7 @@ def conversao(programa_asm, labels: dict[str, int]):
                 continue
         op = tokens[0]
         if op == "LD":
-            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]
+            inst = "0b" + intruções[op] + intruções[tokens[1]] + intruções[tokens[2]]   
             inst = normalizaNumero(inst)
             memory[mem] = inst
             i += 1
@@ -375,6 +375,10 @@ def montador(argv=None):
         return
     escrever_saida(args.output)
     
+
+# Execucao direta
+if __name__ == "__main__":
+    montador()    
 
 # Execucao direta
 if __name__ == "__main__":
