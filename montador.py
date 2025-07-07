@@ -100,11 +100,14 @@ def tamanho_instrucao(tokens: list[str]) -> int:
     if op == "HALT":
         return 2
     if op == "MOVE":
-        # MOVE é considerado uma instrução única
-        return 1
+        # MOVE é expandido em duas instruções (XOR + OR)
+        return 2
     if op == "CLR":
         # CLR gera apenas um XOR registrador consigo mesmo
         return 1
+    # Saltos condicionais formados por combinações de C, A, E e Z
+    if set(op).issubset(set(jcaez)):
+        return 2
     return 1
 
 
@@ -375,10 +378,6 @@ def montador(argv=None):
         return
     escrever_saida(args.output)
     
-
-# Execucao direta
-if __name__ == "__main__":
-    montador()    
 
 # Execucao direta
 if __name__ == "__main__":
