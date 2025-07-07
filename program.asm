@@ -60,7 +60,8 @@ READ_INPUT: IN      DATA R0         ; ‘D’ (dezena)
             ADD     R0 R2           ; dezena*10
             ADD     R0 R1           ; + unidade  → dividendo pronto
             JMP     AFTER_READ
-SHOW_RESULT:DATA    R3 QUOT
+SHOW_RESULT:
+DATA    R3 QUOT
             LD      R1 R3           ; R1 = quociente
             DATA    R2 0x30
             ADD     R1 R2           ; para ASCII
