@@ -114,7 +114,7 @@ def tamanho_instrucao(tokens: list[str]) -> int:
 # Le o codigo assembly e remove comentarios
 def ler_arquivo_asm(arquivo):
     try:
-        with open(arquivo, "r") as f:
+        with open(arquivo, "r", encoding="utf-8") as f:
             content = f.read()
     except FileNotFoundError as e:
         raise FileNotFoundError(f"Arquivo '{arquivo}' não encontrado.") from e
@@ -334,7 +334,7 @@ def conversao(programa_asm, labels: dict[str, int]):
 
 # Grava o arquivo
 def escrever_saida(arquivo):
-    with open(arquivo, "w") as f:
+    with open(arquivo, "w", encoding="utf-8") as f:
         f.write("v3.0 hex words plain\n")
         # grava apenas ate o ultimo endereco utilizado
         fim = 0
